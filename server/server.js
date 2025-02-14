@@ -44,8 +44,10 @@ const upload = multer({
 
 // Middleware
 app.use(cors({
-  origin: "https://videoscholar-dh4g.vercel.app/",
-  credentials: true
+  origin: "https://videoscholar-dh4g.vercel.app",
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
