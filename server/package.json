@@ -1,5 +1,5 @@
 {
-  "name": "video-tracker-backend",
+  "name": "video-tracker-server",
   "version": "1.0.0",
   "description": "Video izleme etkileşimlerini takip eden backend API",
   "main": "server.js",
@@ -13,9 +13,12 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "mongoose": "^8.1.1",
-    "multer": "^1.4.5-lts.1",
-    "nodemon": "^3.0.3"
+    "mongoose": "^7.5.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }

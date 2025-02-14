@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+require('dotenv').config();
 const VideoInteraction = require('./models/VideoInteraction');
 const VideoTracking = require('./models/VideoTracking');
 const Researcher = require('./models/Researcher');
@@ -42,7 +43,10 @@ const upload = multer({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -65,7 +69,7 @@ app.post('/api/upload', (req, res) => {
       return res.status(400).json({ message: 'Video dosyası bulunamadı' });
     }
 
-    const videoUrl = `http://localhost:5000/storage/videos/${req.file.filename}`;
+    const videoUrl = `${process.env.BASE_URL}/storage/videos/${req.file.filename}`;
     res.json({ 
       filename: req.file.filename,
       videoUrl: videoUrl,
@@ -75,7 +79,7 @@ app.post('/api/upload', (req, res) => {
 });
 
 // MongoDB bağlantısı
-mongoose.connect('mongodb://localhost:27017/video-tracker', {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
