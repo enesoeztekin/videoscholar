@@ -1,0 +1,33 @@
+.video-url {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: fit-content;
+  vertical-align: middle;
+  align-items: center;
+  margin: 20px 0;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background-color: var(--bg-light);
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.video-url:hover {
+  background-color: var(--primary-color);
+  color: var(--text-light);
+  transform: translateY(-2px);
+}
+
+.video-url i {
+  font-size: 1.2em;
+  transition: transform 0.2s ease;
+}
+
+.video-url:hover i {
+  transform: rotate(15deg);
+} 
