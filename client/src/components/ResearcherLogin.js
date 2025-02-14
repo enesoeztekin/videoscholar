@@ -4,6 +4,8 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import '../App.css';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 function ResearcherLogin() {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
@@ -55,7 +57,7 @@ function ResearcherLogin() {
     try {
       if (isLogin) {
         // Giriş işlemi
-        const response = await axios.post('http://localhost:5000/api/researcher/login', {
+        const response = await axios.post(`${API_URL}/api/researcher/login`, {
           email: formData.email,
           password: formData.password
         });
@@ -71,7 +73,7 @@ function ResearcherLogin() {
         navigate('/researcher-panel', { state: { email: formData.email } });
       } else {
         // Kayıt işlemi
-        const response = await axios.post('http://localhost:5000/api/researcher/register', {
+        const response = await axios.post(`${API_URL}/api/researcher/register`, {
           email: formData.email,
           password: formData.password,
           name: formData.name,

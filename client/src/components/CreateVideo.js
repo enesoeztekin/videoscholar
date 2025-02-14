@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import '../App.css';
 import VideoUploader from './VideoUploader';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 function CreateVideo() {
   const [videos, setVideos] = useState([]);
   const [videoSource, setVideoSource] = useState('url');
@@ -28,7 +30,7 @@ function CreateVideo() {
 
   const fetchVideos = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/tracking/researcher/${researcherUser.email}`);
+      const response = await axios.get(`${API_URL}/api/tracking/researcher/${researcherUser.email}`);
       setVideos(response.data);
     } catch (error) {
       console.error('Videolar getirilirken hata oluştu:', error);
@@ -57,7 +59,7 @@ function CreateVideo() {
         const formData = new FormData();
         formData.append('video', videoUrl);
 
-        const uploadResponse = await axios.post('http://localhost:5000/api/upload', formData, {
+        const uploadResponse = await axios.post(`${API_URL}/api/upload`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -67,7 +69,7 @@ function CreateVideo() {
       }
 
       // Video tracking oluştur
-      const trackingResponse = await axios.post('http://localhost:5000/api/tracking', {
+      const trackingResponse = await axios.post(`${API_URL}/api/tracking`, {
         videoUrl: finalVideoUrl,
         title: videoTitle,
         description,
@@ -106,7 +108,7 @@ function CreateVideo() {
 
   const handleDeleteVideo = async (trackingId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/tracking/${trackingId}`);
+      await axios.delete(`${API_URL}/api/tracking/${trackingId}`);
       toast.success('Video başarıyla silindi');
       fetchVideos(); // Videoları yeniden yükle
     } catch (error) {

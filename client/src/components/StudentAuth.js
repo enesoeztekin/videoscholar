@@ -4,6 +4,8 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 import '../App.css';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 function StudentAuth() {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
@@ -69,7 +71,7 @@ function StudentAuth() {
     try {
       if (isLogin) {
         // Giriş işlemi
-        const response = await axios.post('http://localhost:5000/api/student/login', {
+        const response = await axios.post(`${API_URL}/api/student/login`, {
           email: formData.email,
           password: formData.password
         });
@@ -93,7 +95,7 @@ function StudentAuth() {
         }
       } else {
         // Kayıt işlemi
-        const response = await axios.post('http://localhost:5000/api/student/register', {
+        const response = await axios.post(`${API_URL}/api/student/register`, {
           email: formData.email,
           password: formData.password,
           name: formData.name,
