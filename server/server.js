@@ -53,6 +53,11 @@ app.use(express.urlencoded({ extended: true }));
 // Statik dosyalar için klasör tanımlama
 app.use('/storage', express.static(path.join(__dirname, 'storage')));
 
+app.get('/', (req, res) => {
+  res.send('Server is running');
+});
+
+
 // Video yükleme endpoint'i
 app.post('/api/upload', (req, res) => {
   upload.single('video')(req, res, function (err) {
