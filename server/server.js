@@ -15,24 +15,16 @@ const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 
-// Multer ayarları
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = path.join(__dirname, 'storage/videos');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${uniqueSuffix}${ext}`);
-  }
+// AWS S3 yapılandırması
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION
 });
 
-const upload = multer({ 
-  storage: storage,
+// Multer ayarları - memory storage kullan
+const upload = multer({
+  storage: multer.memoryStorage(),
   fileFilter: function (req, file, cb) {
     if (!file.mimetype.startsWith('video/')) {
       return cb(new Error('Sadece video dosyaları yüklenebilir!'), false);
@@ -61,19 +53,9 @@ app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
-// AWS S3 yapılandırması
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION
-});
-
-
-
 // Video yükleme endpoint'i
 app.post('/api/upload', async (req, res) => {
   try {
-    // Önce multer ile dosyayı geçici olarak al
     upload.single('video')(req, res, async function (err) {
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
@@ -93,22 +75,19 @@ app.post('/api/upload', async (req, res) => {
       const folderName = researcherEmail.split('@')[0];
       
       // Benzersiz dosya adı oluştur
-      const fileExtension = path.extname(req.file.originalname);
+      const fileExtension = '.mp4';
       const fileName = `${Date.now()}-${uuidv4()}${fileExtension}`;
       
       // S3'e yüklenecek dosya yapılandırması
       const uploadParams = {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: `${folderName}/${fileName}`,
-        Body: fs.createReadStream(req.file.path),
+        Body: req.file.buffer,
         ContentType: req.file.mimetype
       };
 
       // S3'e yükle
       const uploadResult = await s3.upload(uploadParams).promise();
-
-      // Geçici dosyayı sil
-      fs.unlinkSync(req.file.path);
 
       // Başarılı yanıt dön
       res.json({
