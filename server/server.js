@@ -10,6 +10,8 @@ const VideoInteraction = require('./models/VideoInteraction');
 const VideoTracking = require('./models/VideoTracking');
 const Researcher = require('./models/Researcher');
 const Student = require('./models/Student');
+const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 
@@ -59,30 +61,66 @@ app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
+// AWS S3 yapılandırması
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION
+});
+
+
 
 // Video yükleme endpoint'i
-app.post('/api/upload', (req, res) => {
-  upload.single('video')(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ message: 'Dosya boyutu çok büyük (maksimum 500MB)' });
+app.post('/api/upload', async (req, res) => {
+  try {
+    // Önce multer ile dosyayı geçici olarak al
+    upload.single('video')(req, res, async function (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: 'Dosya boyutu çok büyük (maksimum 500MB)' });
+        }
+        return res.status(400).json({ message: err.message });
+      } else if (err) {
+        return res.status(400).json({ message: err.message });
       }
-      return res.status(400).json({ message: err.message });
-    } else if (err) {
-      return res.status(400).json({ message: err.message });
-    }
 
-    if (!req.file) {
-      return res.status(400).json({ message: 'Video dosyası bulunamadı' });
-    }
+      if (!req.file) {
+        return res.status(400).json({ message: 'Video dosyası bulunamadı' });
+      }
 
-    const videoUrl = `${process.env.BASE_URL}/storage/videos/${req.file.filename}`;
-    res.json({ 
-      filename: req.file.filename,
-      videoUrl: videoUrl,
-      thumbnailUrl: videoUrl
+      // Araştırmacı email'inden klasör adını oluştur
+      const researcherEmail = req.body.researcherEmail;
+      const folderName = researcherEmail.split('@')[0];
+      
+      // Benzersiz dosya adı oluştur
+      const fileExtension = path.extname(req.file.originalname);
+      const fileName = `${Date.now()}-${uuidv4()}${fileExtension}`;
+      
+      // S3'e yüklenecek dosya yapılandırması
+      const uploadParams = {
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: `${folderName}/${fileName}`,
+        Body: fs.createReadStream(req.file.path),
+        ContentType: req.file.mimetype
+      };
+
+      // S3'e yükle
+      const uploadResult = await s3.upload(uploadParams).promise();
+
+      // Geçici dosyayı sil
+      fs.unlinkSync(req.file.path);
+
+      // Başarılı yanıt dön
+      res.json({
+        filename: fileName,
+        videoUrl: uploadResult.Location,
+        thumbnailUrl: uploadResult.Location
+      });
     });
-  });
+  } catch (error) {
+    console.error('Video yükleme hatası:', error);
+    res.status(500).json({ message: 'Video yüklenirken bir hata oluştu' });
+  }
 });
 
 // MongoDB bağlantısı
