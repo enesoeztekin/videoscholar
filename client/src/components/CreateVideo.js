@@ -58,14 +58,30 @@ function CreateVideo() {
       if (videoSource === 'file' && videoUrl instanceof File) {
         const formData = new FormData();
         formData.append('video', videoUrl);
+        formData.append('researcherEmail', researcherUser.email);
 
         const uploadResponse = await axios.post(`${API_URL}/api/upload`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
+          },
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            toast.info(`Video yükleniyor: %${percentCompleted}`, {
+              position: "bottom-right",
+              autoClose: false,
+              hideProgressBar: false,
+              closeOnClick: false,
+              pauseOnHover: true,
+              draggable: false,
+              progress: percentCompleted / 100,
+              toastId: 'uploadProgress'
+            });
           }
         });
 
         finalVideoUrl = uploadResponse.data.videoUrl;
+        toast.dismiss('uploadProgress');
+        toast.success('Video başarıyla yüklendi!');
       }
 
       // Video tracking oluştur
