@@ -203,16 +203,16 @@ function ViewInteractions() {
 
 
   const toggleUserInteractions = (userId) => {
-    setExpandedUsers(prev => 
-      prev.includes(userId) 
+    setExpandedUsers(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
   };
 
   const toggleInteractionType = (type) => {
-    setExpandedTypes(prev => 
-      prev.includes(type) 
+    setExpandedTypes(prev =>
+      prev.includes(type)
         ? prev.filter(t => t !== type)
         : [...prev, type]
     );
@@ -221,7 +221,7 @@ function ViewInteractions() {
   const groupInteractionsByUser = (interactions) => {
     // Önce tüm etkileşimleri kullanıcı ID'sine göre grupla
     const userInteractions = {};
-    
+
     interactions.forEach(interaction => {
       if (!userInteractions[interaction.userId]) {
         userInteractions[interaction.userId] = [];
@@ -253,23 +253,22 @@ function ViewInteractions() {
     try {
       // Tüm kullanıcıların etkileşimlerini düzleştir
       const allData = [];
-      
+
       interactions.forEach(userInteraction => {
         const userId = userInteraction.userId;
         const totalWatchTime = userInteraction.totalWatchTime || 0;
-        
+
         // Her kullanıcının etkileşimlerini ekle
         if (userInteraction.interactions && userInteraction.interactions.length > 0) {
           userInteraction.interactions.forEach(interaction => {
             allData.push({
               'Kullanıcı ID': userId,
-              'Toplam İzleme Süresi (sn)': totalWatchTime,
-              'Etkileşim Türü': interaction.type === 'pause' ? 'Durdurma' : 
-                               interaction.type === 'forward' ? 'İleri Sarma' :
-                               interaction.type === 'rewind' ? 'Geri Sarma' :
-                               interaction.type === 'replay' ? 'Tekrar İzleme' :
-                               interaction.type === 'comment' ? 'Yorum' :
-                               interaction.type === 'comment-step' ? 'Yorum Görüntüleme' : interaction.type,
+              'Etkileşim Türü': interaction.type === 'pause' ? 'Durdurma' :
+                interaction.type === 'forward' ? 'İleri Sarma' :
+                  interaction.type === 'rewind' ? 'Geri Sarma' :
+                    interaction.type === 'replay' ? 'Tekrar İzleme' :
+                      interaction.type === 'comment' ? 'Yorum' :
+                        interaction.type === 'comment-step' ? 'Yorum Görüntüleme' : interaction.type,
               'Başlangıç Zamanı (sn)': interaction.startTime,
               'Bitiş Zamanı (sn)': interaction.endTime || interaction.startTime,
               'Zaman Damgası': new Date(interaction.timestamp).toLocaleString(),
@@ -280,7 +279,6 @@ function ViewInteractions() {
           // Etkileşim olmayan kullanıcıları da ekle
           allData.push({
             'Kullanıcı ID': userId,
-            'Toplam İzleme Süresi (sn)': totalWatchTime,
             'Etkileşim Türü': 'Etkileşim Yok',
             'Başlangıç Zamanı (sn)': '',
             'Bitiş Zamanı (sn)': '',
@@ -294,15 +292,15 @@ function ViewInteractions() {
       const worksheet = XLSX.utils.json_to_sheet(allData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Etkileşimler');
-      
+
       // Sütun genişliklerini ayarla
-      const maxWidth = [15, 20, 15, 15, 15, 25, 50];
+      const maxWidth = [15, 15, 15, 15, 25, 50];
       worksheet['!cols'] = maxWidth.map(width => ({ width }));
 
       // Excel dosyasını indir
       const fileName = `${selectedVideo.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_etkileşimler.xlsx`;
       XLSX.writeFile(workbook, fileName);
-      
+
       toast.success('Etkileşim verileri Excel dosyasına aktarıldı.');
     } catch (error) {
       console.error('Excel dışa aktarma hatası:', error);
@@ -333,7 +331,7 @@ function ViewInteractions() {
 
       return (
         <div key={userId} className="user-interaction-card">
-          <div 
+          <div
             className={`user-header ${expandedUsers.includes(userId) ? 'expanded' : ''}`}
             onClick={() => toggleUserInteractions(userId)}
           >
@@ -361,16 +359,16 @@ function ViewInteractions() {
               {Object.entries(groupedByType).map(([type, typeEvents]) => (
                 typeEvents.length > 0 && type !== 'comment-step' && (
                   <div key={type} className="interaction-type-group">
-                    <div 
+                    <div
                       className={`interaction-type-header ${expandedTypes.includes(`${userId}-${type}`) ? 'expanded' : ''}`}
                       onClick={() => toggleInteractionType(`${userId}-${type}`)}
                     >
                       <h4>
-                        {type === 'pause' ? '⏸️ Durdurma' : 
-                         type === 'forward' ? '⏩ İleri Sarma' :
-                         type === 'rewind' ? '⏪ Geri Sarma' :
-                         type === 'replay' ? '🔄 Tekrar İzleme' :
-                         type === 'comment' ? '💬 Yorumlar' : ''} 
+                        {type === 'pause' ? '⏸️ Durdurma' :
+                          type === 'forward' ? '⏩ İleri Sarma' :
+                            type === 'rewind' ? '⏪ Geri Sarma' :
+                              type === 'replay' ? '🔄 Tekrar İzleme' :
+                                type === 'comment' ? '💬 Yorumlar' : ''}
                         <span className="type-count">({typeEvents.length})</span>
                       </h4>
                       <i className={`fas fa-chevron-${expandedTypes.includes(`${userId}-${type}`) ? 'up' : 'down'}`}></i>
@@ -391,7 +389,7 @@ function ViewInteractions() {
                                       </span>
                                     )}
                                   </span>
-                                  <button 
+                                  <button
                                     className="show-in-video small"
                                     onClick={() => handleShowInVideo(event.comment?.videoTime || 0)}
                                   >
@@ -407,11 +405,11 @@ function ViewInteractions() {
                             ) : (
                               <>
                                 <span className="interaction-time">
-                                  {event.type === 'pause' ? 
+                                  {event.type === 'pause' ?
                                     formatDuration(event.startTime) :
-                                    `${formatDuration(event.startTime)} → ${formatDuration(event.endTime)}`                                  }
+                                    `${formatDuration(event.startTime)} → ${formatDuration(event.endTime)}`}
                                 </span>
-                                <button 
+                                <button
                                   className="show-in-video small"
                                   onClick={() => handleShowInVideo(event.startTime)}
                                 >
@@ -483,19 +481,19 @@ function ViewInteractions() {
               <div className="video-header">
                 <div className="video-title">
                   <h2>{selectedVideo.title}</h2>
-                  <button 
+                  <button
                     onClick={() => {
                       const studentUrl = `http://localhost:3000/watch/${selectedVideo.trackingId}`;
                       navigator.clipboard.writeText(studentUrl);
                       toast.success('Video linki kopyalandı. Öğrenciler ile paylaşabilirsiniz');
-                    }} 
+                    }}
                     className="video-url"
                   >
                     <i className="fas fa-share-alt"></i>
                     Videoyu Paylaş
                   </button>
-                  <button 
-                    onClick={exportToExcel} 
+                  <button
+                    onClick={exportToExcel}
                     className="video-url export-btn"
                   >
                     <i className="fas fa-file-excel"></i>
@@ -525,7 +523,7 @@ function ViewInteractions() {
                       if (!stats) return null;
 
                       const [startTime, endTime] = stats.mostReplayedRange.range.split('-');
-                      
+
                       return (
                         <div className="stats-grid">
                           <div className="stat-card">
@@ -548,7 +546,7 @@ function ViewInteractions() {
                                     {formatDuration(endTime)} - {formatDuration(startTime)}
                                     <small>{stats.mostReplayedRange.count} kez tekrar edildi</small>
                                   </p>
-                                  <button 
+                                  <button
                                     className="show-in-video small"
                                     onClick={() => handleShowInVideo(parseFloat(endTime))}
                                   >
@@ -596,7 +594,7 @@ function ViewInteractions() {
                               className="search-input"
                             />
                             {searchTerm && (
-                              <button 
+                              <button
                                 className="clear-search"
                                 onClick={() => setSearchTerm('')}
                               >
