@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 import axios from 'axios';
 import '../App.css';
 import { toast } from 'react-toastify';
@@ -243,6 +244,72 @@ function ViewInteractions() {
     }
   };
 
+  const exportToExcel = () => {
+    if (!selectedVideo || !interactions || interactions.length === 0) {
+      toast.error('Dışa aktarılacak veri bulunamadı.');
+      return;
+    }
+
+    try {
+      // Tüm kullanıcıların etkileşimlerini düzleştir
+      const allData = [];
+      
+      interactions.forEach(userInteraction => {
+        const userId = userInteraction.userId;
+        const totalWatchTime = userInteraction.totalWatchTime || 0;
+        
+        // Her kullanıcının etkileşimlerini ekle
+        if (userInteraction.interactions && userInteraction.interactions.length > 0) {
+          userInteraction.interactions.forEach(interaction => {
+            allData.push({
+              'Kullanıcı ID': userId,
+              'Toplam İzleme Süresi (sn)': totalWatchTime,
+              'Etkileşim Türü': interaction.type === 'pause' ? 'Durdurma' : 
+                               interaction.type === 'forward' ? 'İleri Sarma' :
+                               interaction.type === 'rewind' ? 'Geri Sarma' :
+                               interaction.type === 'replay' ? 'Tekrar İzleme' :
+                               interaction.type === 'comment' ? 'Yorum' :
+                               interaction.type === 'comment-step' ? 'Yorum Görüntüleme' : interaction.type,
+              'Başlangıç Zamanı (sn)': interaction.startTime,
+              'Bitiş Zamanı (sn)': interaction.endTime || interaction.startTime,
+              'Zaman Damgası': new Date(interaction.timestamp).toLocaleString(),
+              'Yorum': interaction.type === 'comment' && interaction.comment ? interaction.comment.text : ''
+            });
+          });
+        } else {
+          // Etkileşim olmayan kullanıcıları da ekle
+          allData.push({
+            'Kullanıcı ID': userId,
+            'Toplam İzleme Süresi (sn)': totalWatchTime,
+            'Etkileşim Türü': 'Etkileşim Yok',
+            'Başlangıç Zamanı (sn)': '',
+            'Bitiş Zamanı (sn)': '',
+            'Zaman Damgası': '',
+            'Yorum': ''
+          });
+        }
+      });
+
+      // Excel çalışma kitabı oluştur
+      const worksheet = XLSX.utils.json_to_sheet(allData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Etkileşimler');
+      
+      // Sütun genişliklerini ayarla
+      const maxWidth = [15, 20, 15, 15, 15, 25, 50];
+      worksheet['!cols'] = maxWidth.map(width => ({ width }));
+
+      // Excel dosyasını indir
+      const fileName = `${selectedVideo.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_etkileşimler.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      
+      toast.success('Etkileşim verileri Excel dosyasına aktarıldı.');
+    } catch (error) {
+      console.error('Excel dışa aktarma hatası:', error);
+      toast.error('Excel dışa aktarma sırasında bir hata oluştu.');
+    }
+  };
+
   const renderUserInteractions = (interactions) => {
     const userInteractions = groupInteractionsByUser(interactions);
 
@@ -426,6 +493,13 @@ function ViewInteractions() {
                   >
                     <i className="fas fa-share-alt"></i>
                     Videoyu Paylaş
+                  </button>
+                  <button 
+                    onClick={exportToExcel} 
+                    className="video-url export-btn"
+                  >
+                    <i className="fas fa-file-excel"></i>
+                    Excel'e Aktar
                   </button>
                 </div>
                 <div className="video-stats">
